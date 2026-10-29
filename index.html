@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07111f">
+<title>JARVIS AI Assistant</title>
+<style>
+:root {
+  --bg:#07111f; --panel:#0d1b2b; --cyan:#43e8ff;
+  --text:#eaf8ff; --muted:#8da8bd; --border:#18364b;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh; color:var(--text);
+  background:radial-gradient(ellipse at top,#12304a 0%,var(--bg) 55%);
+  font-family:Arial,Helvetica,sans-serif;
+}
+header {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:12px; padding:18px 5%; border-bottom:1px solid var(--border);
+}
+.logo { color:var(--cyan); font-size:24px; font-weight:800; letter-spacing:4px; }
+.clock { text-align:right; color:var(--cyan); }
+#time { font-size:20px; font-weight:bold; }
+#date { font-size:12px; color:var(--muted); margin-top:5px; }
+main { width:min(1100px,92%); margin:28px auto; }
+.hero { text-align:center; padding:16px 0 25px; }
+.hero h1 { margin:8px 0; font-size:clamp(28px,6vw,48px); }
+.hero p { color:var(--muted); }
+.orb {
+  width:150px; height:150px; margin:18px auto;
+  border:2px solid var(--cyan); border-radius:50%;
+  display:grid; place-items:center; color:var(--cyan);
+  font-size:42px; box-shadow:0 0 28px #43e84430,inset 0 0 25px #43e84420;
+  animation:pulse 3s infinite;
+}
+@keyframes pulse {
+  50% { box-shadow:0 0 45px #43e8ff65,inset 0 0 35px #43e8ff30; }
+}
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.panel {
+  min-width:0; background:#0d1b2bd9; border:1px solid var(--border);
+  border-radius:16px; padding:18px;
+}
+.panel h2 { font-size:17px; margin:0 0 14px; color:var(--cyan); }
+#messages {
+  height:230px; overflow-y:auto; display:flex; flex-direction:column;
+  gap:10px; margin-bottom:12px;
+}
+.msg { padding:10px 12px; border-radius:12px; line-height:1.5;
+  overflow-wrap:anywhere; font-size:14px; }
+.bot { background:#142a3b; align-self:flex-start; }
+.user { background:#103e50; align-self:flex-end; }
+form { display:flex; gap:8px; }
+input {
+  min-width:0; flex:1; background:#07111f; color:var(--text);
+  border:1px solid var(--border); border-radius:10px; padding:12px;
+  font-size:14px;
+}
+button,.app {
+  cursor:pointer; border:1px solid #25647a; border-radius:10px;
+  background:#102b3c; color:var(--cyan); padding:11px 13px;
+  font-weight:bold;
+}
+button:hover,.app:hover { background:#174257; }
+.actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.apps { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.app { text-align:center; text-decoration:none; display:block; font-size:14px; }
+.app span { display:block; font-size:23px; margin-bottom:7px; }
+.status { color:var(--muted); font-size:12px; margin-top:12px; }
+footer { text-align:center; color:var(--muted); padding:25px 10px; font-size:12px; }
+@media(max-width:650px) {
+  header { padding:15px 4%; }
+  .logo { font-size:20px; letter-spacing:2px; }
+  .grid { grid-template-columns:1fr; }
+  main { width:92%; margin-top:16px; }
+  .orb { width:125px; height:125px; }
+  #messages { height:200px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">J.A.R.V.I.S.</div>
+  <div class="clock">
+    <div id="time">--:--:--</div>
+    <div id="date">Loading date...</div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="orb">◉</div>
+    <h1>JARVIS <span style="color:var(--cyan)">AI</span></h1>
+    <p>Your personal assistant dashboard</p>
+    <div id="status" class="status">SYSTEM ONLINE · DEMO MODE</div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>◈ Talk to JARVIS</h2>
+      <div id="messages" aria-live="polite">
+        <div class="msg bot">Hello! I am JARVIS. Type a message or try the microphone to get started.</div>
+      </div>
+      <form id="chatForm">
+        <input id="userInput" placeholder="Ask me something..." autocomplete="off" required>
+        <button type="submit">Send</button>
+      </form>
+      <div class="actions">
+        <button id="micBtn" type="button">🎙️ Speak</button>
+        <button id="stopBtn" type="button">🔇 Stop voice</button>
+      </div>
+      <p class="status">Voice input depends on your browser and microphone permission.</p>
+    </section>
+
+    <section class="panel">
+      <h2>▣ Quick app shortcuts</h2>
+      <div class="apps">
+        <a class="app" href="https://www.google.com" target="_blank" rel="noopener noreferrer"><span>🔎</span>Google</a>
+        <a class="app" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer"><span>▶️</span>YouTube</a>
+        <a class="app" href="https://mail.google.com" target="_blank" rel="noopener noreferrer"><span>✉️</span>Gmail</a>
+        <a class="app" href="https://github.com" target="_blank" rel="noopener noreferrer"><span>💻</span>GitHub</a>
+      </div>
+      <p class="status">Shortcuts open websites in a new tab. Sign in to services only on their official websites.</p>
+    </section>
+
+    <section class="panel">
+      <h2>◉ System status</h2>
+      <p>Interface: <strong>Ready</strong></p>
+      <p>Clock: <strong>Live</strong></p>
+      <p>Voice output: <strong id="voiceStatus">Checking...</strong></p>
+      <p>AI connection: <strong>Not connected</strong></p>
+      <p class="status">This version does not connect to an AI service yet.</p>
+    </section>
+
+    <section class="panel">
+      <h2>✦ Try a command</h2>
+      <p style="color:var(--muted);line-height:1.8">
+        • What time is it?<br>
+        • What is your name?<br>
+        • Open YouTube<br>
+        • Tell me a fun fact
+      </p>
+      <button id="helpBtn" type="button">Show commands</button>
+    </section>
+  </div>
+</main>
+
+<footer>JARVIS AI · Personal project · Keep your API keys private</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function updateClock() {
+  const now = new Date();
+  $("time").textContent = now.toLocaleTimeString();
+  $("date").textContent = now.toLocaleDateString(undefined, {
+    weekday:"long", year:"numeric", month:"short", day:"numeric"
+  });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+$("voiceStatus").textContent =
+  "speechSynthesis" in window ? "Available" : "Not supported";
+
+function addMessage(text, who) {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+  div.textContent = text;
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
+function replyTo(message) {
+  const q = message.toLowerCase().trim();
+
+  if (q.includes("time")) {
+    return "The current time is " + new Date().toLocaleTimeString() + ".";
+  }
+  if (q.includes("date") || q.includes("today")) {
+    return "Today is " + new Date().toLocaleDateString(undefined, {
+      weekday:"long", year:"numeric", month:"long", day:"numeric"
+    }) + ".";
+  }
+  if (q.includes("your name") || q.includes("who are you")) {
+    return "I am JARVIS, your personal assistant dashboard.";
+  }
+  if (q.includes("youtube")) {
+    window.open("https://www.youtube.com", "_blank", "noopener,noreferrer");
+    return "Opening YouTube in a new tab.";
+  }
+  if (q.includes("google")) {
+    window.open("https://www.google.com", "_blank", "noopener,noreferrer");
+    return "Opening Google in a new tab.";
+  }
+  if (q.includes("github")) {
+    window.open("https://github.com", "_blank", "noopener,noreferrer");
+    return "Opening GitHub in a new tab.";
+  }
+  if (q.includes("fun fact")) {
+    return "Fun fact: Octopuses have three hearts!";
+  }
+  if (q.includes("hello") || q.includes("hi jarvis")) {
+    return "Hello! How can I help you today?";
+  }
+  if (q.includes("help") || q.includes("commands")) {
+    return "Try asking for the time or date, ask who I am, request a fun fact, or say open Google, YouTube, or GitHub.";
+  }
+  return "I received your message! I am currently in demo mode, so I cannot answer general questions yet. We can connect a real AI service in the next stage.";
+}
+
+function sendMessage(message) {
+  const text = message.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  const response = replyTo(text);
+  addMessage(response, "bot");
+  speak(response);
+}
+
+$("chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  sendMessage($("userInput").value);
+  $("userInput").value = "";
+});
+
+$("helpBtn").addEventListener("click", () => {
+  const response = "Try: What time is it? What is your name? Open YouTube. Tell me a fun fact.";
+  addMessage(response, "bot");
+});
+
+$("stopBtn").addEventListener("click", () => {
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  $("status").textContent = "VOICE OUTPUT STOPPED";
+});
+
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    $("status").textContent = "LISTENING... SPEAK NOW";
+    $("micBtn").textContent = "🎙️ Listening...";
+  };
+  recognition.onresult = event => {
+    const heard = event.results[0][0].transcript;
+    $("userInput").value = heard;
+    sendMessage(heard);
+  };
+  recognition.onerror = () => {
+    $("status").textContent = "VOICE INPUT UNAVAILABLE";
+  };
+  recognition.onend = () => {
+    $("micBtn").textContent = "🎙️ Speak";
+    $("status").textContent = "SYSTEM ONLINE · DEMO MODE";
+  };
+  $("micBtn").addEventListener("click", () => {
+    try { recognition.start(); }
+    catch (error) { $("status").textContent = "PLEASE TRY AGAIN IN A MOMENT"; }
+  });
+} else {
+  $("micBtn").addEventListener("click", () => {
+    addMessage("Voice input is not supported in this browser. Try a recent version of Chrome, or type your message instead.", "bot");
+  });
+}
+</script>
+</body>
+</html>
