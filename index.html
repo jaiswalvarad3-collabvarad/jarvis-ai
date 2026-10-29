@@ -1,5 +1,94 @@
+name = "jarvis-ai-backend"
+main = "worker.js"
+compatibility_date = "2026-10-29"
 
-<!DOCTYPE html>
+<!DO// JARVIS backend for Cloudflare Workers
+// Set OPENAI_API_KEY as a Worker secret in Cloudflare. Never put the key in index.html.
+
+const ALLOWED_ORIGIN = "https://jaiswalvarad3-collabvarad.github.io";
+
+function corsHeaders(origin) {
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Vary": "Origin",
+    "Content-Type": "application/json; charset=utf-8"
+  };
+}
+
+function json(data, status, origin) {
+  return new Response(JSON.stringify(data), { status, headers: corsHeaders(origin) });
+}
+
+export default {
+  async fetch(request, env) {
+    const origin = request.headers.get("Origin") || "";
+
+    if (origin && origin !== ALLOWED_ORIGIN) {
+      return new Response(JSON.stringify({ error: "Origin not allowed." }), {
+        status: 403,
+        headers: { "Content-Type": "application/json; charset=utf-8" }
+      });
+    }
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+    if (request.method !== "POST") {
+      return json({ error: "Use POST to send a chat message." }, 405, origin);
+    }
+    if (!env.OPENAI_API_KEY) {
+      return json({ error: "AI is not configured. Add OPENAI_API_KEY as a Worker secret." }, 500, origin);
+    }
+
+    try {
+      const body = await request.json();
+      const message = body && body.message;
+      if (typeof message !== "string" || !message.trim()) {
+        return json({ error: "Please enter a message." }, 400, origin);
+      }
+      if (message.length > 4000) {
+        return json({ error: "Message is too long. Please use fewer than 4000 characters." }, 400, origin);
+      }
+
+      const apiResponse = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          instructions: "You are JARVIS, a helpful, friendly AI assistant. Give clear, concise answers suitable for a general audience.",
+          input: message.trim(),
+          max_output_tokens: 500
+        })
+      });
+
+      const data = await apiResponse.json();
+      if (!apiResponse.ok) {
+        // Do not return provider details or secrets to the browser.
+        console.error("OpenAI API request failed with status", apiResponse.status);
+        return json({ error: "The AI service could not complete that request. Check API billing and key settings." }, 502, origin);
+      }
+
+      const reply = (data.output || [])
+        .flatMap(item => item.content || [])
+        .filter(item => item.type === "output_text")
+        .map(item => item.text)
+        .join("\n")
+        .trim();
+
+      if (!reply) return json({ error: "The AI returned no text. Please try again." }, 502, origin);
+      return json({ reply }, 200, origin);
+    } catch (error) {
+      console.error("JARVIS Worker error:", error && error.message ? error.message : "unknown error");
+      return json({ error: "Something went wrong. Please try again." }, 500, origin);
+    }
+  }
+};
+CTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
